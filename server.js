@@ -29,12 +29,14 @@ app.post('/games', async (req, res) => {
   try {
     const pool = await getPool();
     const result = await pool.request()
-      .input('Team1Player1', sql.Int, team1Player1)
-      .input('Team1Player2', sql.Int, team1Player2)
-      .input('Team2Player1', sql.Int, team2Player1)
-      .input('Team2Player2', sql.Int, team2Player2)
-      .query(`INSERT INTO Games (Team1Player1, Team1Player2, Team2Player1, Team2Player2, Status) OUTPUT INSERTED.Id VALUES (@Team1Player1, @Team1Player2, @Team2Player1, @Team2Player2, 'ongoing')`);
-    res.json({ gameId: result.recordset[0].Id });
+      .input('team1Player1', sql.Int, team1Player1)
+      .input('team1Player2', sql.Int, team1Player2)
+      .input('team2Player1', sql.Int, team2Player1)
+      .input('team2Player2', sql.Int, team2Player2)
+      .query(`INSERT INTO Games (_Team1_Player1_ID, _Team1_Player2_ID, _Team2_Player1_ID, _Team2_Player2_ID, Status, StartedAt)
+              OUTPUT INSERTED._Games_ID
+              VALUES (@team1Player1, @team1Player2, @team2Player1, @team2Player2, 'ongoing', GETDATE())`);
+    res.json({ gameId: result.recordset[0]._Games_ID });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create game' });
@@ -46,10 +48,10 @@ app.get('/games/:id', async (req, res) => {
     const pool = await getPool();
     const game = await pool.request()
       .input('id', sql.Int, req.params.id)
-      .query('SELECT * FROM Games WHERE Id = @id');
+      .query('SELECT * FROM Games WHERE _Games_ID = @id');
     const events = await pool.request()
       .input('gameId', sql.Int, req.params.id)
-      .query('SELECT * FROM Game_Events WHERE GameId = @gameId ORDER BY EventTime ASC');
+      .query('SELECT * FROM GameEvents WHERE _Games_ID = @gameId ORDER BY Timestamp ASC');
     res.json({ game: game.recordset[0], events: events.recordset });
   } catch (err) {
     console.error(err);
@@ -66,8 +68,8 @@ app.post('/games/:id/events', async (req, res) => {
       .input('eventType', sql.NVarChar, eventType)
       .input('pointsTeam1', sql.Int, pointsTeam1)
       .input('pointsTeam2', sql.Int, pointsTeam2)
-      .query(`INSERT INTO Game_Events (GameId, EventType, PointsTeam1, PointsTeam2, EventTime)
-              VALUES (@gameId, @eventType, @pointsTeam1, @pointsTeam2, GETDATE())`);
+      .query(`INSERT INTO GameEvents (_Games_ID, Name, EventType, PointsTeam1, PointsTeam2, Timestamp)
+              VALUES (@gameId, @eventType, @eventType, @pointsTeam1, @pointsTeam2, GETDATE())`);
     res.json({ success: true });
   } catch (err) {
     console.error(err);

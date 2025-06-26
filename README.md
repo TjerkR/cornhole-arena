@@ -21,7 +21,7 @@ Each player belongs to one of our company locations. The app does not require a 
    - `DB_USER` – database username
    - `DB_PASS` – database password
    - `DB_SERVER` – hostname of the SQL Server instance
-   - `DB_NAME` – database name containing the `Games` and `Game_Events` tables
+   - `DB_NAME` – database name containing the `Games` and `GameEvents` tables
    - `PORT` (optional) – port for the HTTP server (defaults to `3000`)
 
 3. Start the server:
