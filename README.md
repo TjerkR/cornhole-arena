@@ -6,7 +6,8 @@ Each player belongs to one of our company locations. The app does not require a 
 The API now also lets you create and list players and locations. When starting a
 game you pick from the players stored in the database. Games automatically end
 when a team reaches **21 points**. The winning team is stored in the `Games`
-table and each player's win/loss record is updated.
+table and each player's win/loss record and Elo rating are updated. Every player
+starts with an Elo score of **1000** which adjusts after each completed match.
 
 ## Prerequisites
 
@@ -53,7 +54,7 @@ table and each player's win/loss record is updated.
 POST /locations  - add a location
 GET  /locations  - list locations
 POST /players    - add a player (requires email and a location ID)
-GET  /players    - list players
+GET  /players    - list players (includes current Elo rating)
 POST /games      - start a game with existing players
 ```
 

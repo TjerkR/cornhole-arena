@@ -89,7 +89,8 @@ async function loadPlayers() {
     players.forEach(p => {
       const opt = document.createElement('option');
       opt.value = p._Players_ID;
-      opt.textContent = p.Name;
+      const rating = p.Elo !== undefined ? p.Elo : 1000;
+      opt.textContent = `${p.Name} (${rating})`;
       sel.appendChild(opt);
     });
   });
