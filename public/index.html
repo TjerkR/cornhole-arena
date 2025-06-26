@@ -12,13 +12,29 @@
 </head>
 <body>
 <h1>Cornhole Arena</h1>
+<div id="locationForm">
+  <h2>Add Location</h2>
+  <form id="newLocationForm">
+    <input type="text" id="locName" placeholder="Location Name" required />
+    <button type="submit">Add Location</button>
+  </form>
+</div>
+
+<div id="playerForm">
+  <h2>Add Player</h2>
+  <form id="newPlayerForm">
+    <input type="text" id="playerName" placeholder="Player Name" required />
+    <select id="playerLocation" required></select>
+    <button type="submit">Add Player</button>
+  </form>
+</div>
 <div id="gameForm">
   <h2>Start New Game</h2>
   <form id="newGameForm">
-    <input type="number" id="p1" placeholder="Team 1 Player 1 ID" required />
-    <input type="number" id="p2" placeholder="Team 1 Player 2 ID" required />
-    <input type="number" id="p3" placeholder="Team 2 Player 1 ID" required />
-    <input type="number" id="p4" placeholder="Team 2 Player 2 ID" required />
+    <select id="p1" required></select>
+    <select id="p2" required></select>
+    <select id="p3" required></select>
+    <select id="p4" required></select>
     <button type="submit">Create Game</button>
   </form>
 </div>
@@ -49,13 +65,66 @@
 <script>
 let currentGameId = null;
 
+async function loadLocations() {
+  const res = await fetch('/locations');
+  const locations = await res.json();
+  const select = document.getElementById('playerLocation');
+  select.innerHTML = '';
+  locations.forEach(loc => {
+    const opt = document.createElement('option');
+    opt.value = loc._Locations_ID;
+    opt.textContent = loc.Name;
+    select.appendChild(opt);
+  });
+}
+
+async function loadPlayers() {
+  const res = await fetch('/players');
+  const players = await res.json();
+  ['p1','p2','p3','p4'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '';
+    players.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p._Players_ID;
+      opt.textContent = p.Name;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+document.getElementById('newLocationForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const name = document.getElementById('locName').value;
+  await fetch('/locations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  document.getElementById('locName').value = '';
+  loadLocations();
+});
+
+document.getElementById('newPlayerForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const name = document.getElementById('playerName').value;
+  const locationId = parseInt(document.getElementById('playerLocation').value, 10);
+  await fetch('/players', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, locationId })
+  });
+  document.getElementById('playerName').value = '';
+  loadPlayers();
+});
+
 document.getElementById('newGameForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const data = {
     team1Player1: parseInt(document.getElementById('p1').value, 10),
     team1Player2: parseInt(document.getElementById('p2').value, 10),
     team2Player1: parseInt(document.getElementById('p3').value, 10),
-    team2Player2: parseInt(document.getElementById('p4').value, 10) 
+    team2Player2: parseInt(document.getElementById('p4').value, 10)
   };
   const res = await fetch('/games', {
     method: 'POST',
@@ -106,6 +175,9 @@ async function loadEvents() {
     }
   });
 }
+
+// Initialize dropdowns on page load
+loadLocations().then(loadPlayers);
 </script>
 </body>
 </html>

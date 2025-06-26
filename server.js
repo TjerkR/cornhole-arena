@@ -24,10 +24,82 @@ async function getPool() {
   return pool;
 }
 
+// --- Player and Location Endpoints ---
+
+// Get all players
+app.get('/players', async (req, res) => {
+  try {
+    const pool = await getPool();
+    const result = await pool.request().query('SELECT * FROM Players');
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch players' });
+  }
+});
+
+// Create new player
+app.post('/players', async (req, res) => {
+  const { name, locationId } = req.body;
+  try {
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('name', sql.NVarChar, name)
+      .input('locationId', sql.Int, locationId)
+      .query(`INSERT INTO Players (Name, _Locations_ID)
+              OUTPUT INSERTED._Players_ID
+              VALUES (@name, @locationId)`);
+    res.json({ playerId: result.recordset[0]._Players_ID });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to add player' });
+  }
+});
+
+// Get all locations
+app.get('/locations', async (req, res) => {
+  try {
+    const pool = await getPool();
+    const result = await pool.request().query('SELECT * FROM Locations');
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch locations' });
+  }
+});
+
+// Create new location
+app.post('/locations', async (req, res) => {
+  const { name } = req.body;
+  try {
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('name', sql.NVarChar, name)
+      .query(`INSERT INTO Locations (Name)
+              OUTPUT INSERTED._Locations_ID
+              VALUES (@name)`);
+    res.json({ locationId: result.recordset[0]._Locations_ID });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to add location' });
+  }
+});
+
 app.post('/games', async (req, res) => {
   const { team1Player1, team1Player2, team2Player1, team2Player2 } = req.body;
   try {
     const pool = await getPool();
+    // Ensure all players exist
+    const check = await pool.request()
+      .input('p1', sql.Int, team1Player1)
+      .input('p2', sql.Int, team1Player2)
+      .input('p3', sql.Int, team2Player1)
+      .input('p4', sql.Int, team2Player2)
+      .query(`SELECT COUNT(*) AS cnt FROM Players WHERE _Players_ID IN (@p1,@p2,@p3,@p4)`);
+    if (check.recordset[0].cnt !== 4) {
+      return res.status(400).json({ error: 'One or more players do not exist' });
+    }
+
     const result = await pool.request()
       .input('team1Player1', sql.Int, team1Player1)
       .input('team1Player2', sql.Int, team1Player2)
