@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cornhole Arena</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .scoreboard { margin-top: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  </style>
+</head>
+<body>
+<h1>Cornhole Arena</h1>
+<div id="gameForm">
+  <h2>Start New Game</h2>
+  <form id="newGameForm">
+    <input type="number" id="p1" placeholder="Team 1 Player 1 ID" required />
+    <input type="number" id="p2" placeholder="Team 1 Player 2 ID" required />
+    <input type="number" id="p3" placeholder="Team 2 Player 1 ID" required />
+    <input type="number" id="p4" placeholder="Team 2 Player 2 ID" required />
+    <button type="submit">Create Game</button>
+  </form>
+</div>
+
+<div id="eventForm" style="display:none;">
+  <h2>Add Turn</h2>
+  <form id="addEventForm">
+    <input type="number" id="t1Points" placeholder="Team 1 Points" required />
+    <input type="number" id="t2Points" placeholder="Team 2 Points" required />
+    <button type="submit">Add Turn</button>
+  </form>
+</div>
+
+<div class="scoreboard" style="display:none;">
+  <h2>Scoreboard</h2>
+  <table id="eventsTable">
+    <thead>
+      <tr>
+        <th>Turn</th>
+        <th>Team 1</th>
+        <th>Team 2</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+let currentGameId = null;
+
+document.getElementById('newGameForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const data = {
+    team1Player1: parseInt(document.getElementById('p1').value, 10),
+    team1Player2: parseInt(document.getElementById('p2').value, 10),
+    team2Player1: parseInt(document.getElementById('p3').value, 10),
+    team2Player2: parseInt(document.getElementById('p4').value, 10) 
+  };
+  const res = await fetch('/games', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json();
+  currentGameId = json.gameId;
+  document.getElementById('gameForm').style.display = 'none';
+  document.getElementById('eventForm').style.display = 'block';
+  document.querySelector('.scoreboard').style.display = 'block';
+});
+
+document.getElementById('addEventForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const data = {
+    eventType: 'turn',
+    pointsTeam1: parseInt(document.getElementById('t1Points').value, 10),
+    pointsTeam2: parseInt(document.getElementById('t2Points').value, 10)
+  };
+  await fetch(`/games/${currentGameId}/events`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  loadEvents();
+});
+
+async function loadEvents() {
+  const res = await fetch(`/games/${currentGameId}`);
+  const json = await res.json();
+  const tbody = document.querySelector('#eventsTable tbody');
+  tbody.innerHTML = '';
+  let turn = 1;
+  json.events.forEach(ev => {
+    if(ev.EventType === 'turn') {
+      const row = document.createElement('tr');
+      const tdTurn = document.createElement('td');
+      tdTurn.textContent = turn++;
+      const tdT1 = document.createElement('td');
+      tdT1.textContent = ev.PointsTeam1;
+      const tdT2 = document.createElement('td');
+      tdT2.textContent = ev.PointsTeam2;
+      row.appendChild(tdTurn);
+      row.appendChild(tdT1);
+      row.appendChild(tdT2);
+      tbody.appendChild(row);
+    }
+  });
+}
+</script>
+</body>
+</html>
