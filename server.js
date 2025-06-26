@@ -47,9 +47,9 @@ app.post('/players', async (req, res) => {
       .input('name', sql.NVarChar, name)
       .input('email', sql.NVarChar, email)
       .input('locationId', sql.Int, locationId)
-      .query(`INSERT INTO Players (Name, EmailAddress, _Locations_ID)
+      .query(`INSERT INTO Players (Name, EmailAddress, _Locations_ID, Elo)
               OUTPUT INSERTED._Players_ID
-              VALUES (@name, @email, @locationId)`);
+              VALUES (@name, @email, @locationId, 1000)`);
     res.json({ playerId: result.recordset[0]._Players_ID });
   } catch (err) {
     console.error(err);
@@ -194,6 +194,39 @@ app.post('/games/:id/events', async (req, res) => {
         await pool.request()
           .input('pid', sql.Int, pid)
           .query('UPDATE Players SET Losses = ISNULL(Losses,0)+1 WHERE _Players_ID=@pid');
+      }
+
+      // --- Elo rating updates ---
+      const ratingRes = await pool.request()
+        .input('p1', sql.Int, g._Team1_Player1_ID)
+        .input('p2', sql.Int, g._Team1_Player2_ID)
+        .input('p3', sql.Int, g._Team2_Player1_ID)
+        .input('p4', sql.Int, g._Team2_Player2_ID)
+        .query('SELECT _Players_ID, Elo FROM Players WHERE _Players_ID IN (@p1,@p2,@p3,@p4)');
+
+      const ratings = {};
+      for (const row of ratingRes.recordset) {
+        ratings[row._Players_ID] = row.Elo || 1000;
+      }
+
+      const winRating = (ratings[winners[0]] + ratings[winners[1]]) / 2;
+      const loseRating = (ratings[losers[0]] + ratings[losers[1]]) / 2;
+      const expectedWin = 1 / (1 + Math.pow(10, (loseRating - winRating) / 400));
+      const expectedLose = 1 - expectedWin;
+      const K = 32;
+
+      const updates = [
+        { id: winners[0], rating: ratings[winners[0]] + K * (1 - expectedWin) },
+        { id: winners[1], rating: ratings[winners[1]] + K * (1 - expectedWin) },
+        { id: losers[0], rating: ratings[losers[0]] + K * (0 - expectedLose) },
+        { id: losers[1], rating: ratings[losers[1]] + K * (0 - expectedLose) }
+      ];
+
+      for (const u of updates) {
+        await pool.request()
+          .input('elo', sql.Int, Math.round(u.rating))
+          .input('pid', sql.Int, u.id)
+          .query('UPDATE Players SET Elo=@elo WHERE _Players_ID=@pid');
       }
     }
 
