@@ -1,1 +1,44 @@
-# cornhole-arena
+# Cornhole Arena
+
+This is a simple web application to track cornhole games. It exposes a small API powered by Node.js and Express and stores game data in SQL Server.
+
+## Prerequisites
+
+- Node.js 18+
+- Access to a SQL Server instance
+
+## Setup
+
+1. Install dependencies (requires internet access):
+
+   ```bash
+   npm install
+   ```
+
+2. Configure the following environment variables:
+
+   - `DB_USER` – database username
+   - `DB_PASS` – database password
+   - `DB_SERVER` – hostname of the SQL Server instance
+   - `DB_NAME` – database name containing the `Games` and `Game_Events` tables
+   - `PORT` (optional) – port for the HTTP server (defaults to `3000`)
+
+3. Start the server:
+
+   ```bash
+   npm start
+   ```
+
+4. Open `http://localhost:3000` in your browser to create a game and record turns.
+
+## Project Structure
+
+```
+.
+├── server.js       - Express server with API endpoints
+├── package.json    - Node.js dependencies and scripts
+└── public/
+    └── index.html  - Minimal front-end to create games and add turns
+```
+
+This code is intentionally lightweight for hackathon use. Feel free to expand upon it!
