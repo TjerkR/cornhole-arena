@@ -25,7 +25,11 @@ async function getPool() {
 }
 
 app.post('/games', async (req, res) => {
+<<<<<<< 8atgqv-codex/connect-frontend-to-sql-server-database
   const { team1Player1, team1Player2, team2Player1, team2Player2 } = req.body;
+=======
+  const { team1Player1, team1Player2, team2Player1, team2Player2, locationId } = req.body;
+>>>>>>> main
   try {
     const pool = await getPool();
     const result = await pool.request()
@@ -33,9 +37,16 @@ app.post('/games', async (req, res) => {
       .input('Team1Player2', sql.Int, team1Player2)
       .input('Team2Player1', sql.Int, team2Player1)
       .input('Team2Player2', sql.Int, team2Player2)
+<<<<<<< 8atgqv-codex/connect-frontend-to-sql-server-database
       .query(`INSERT INTO Games (Team1Player1, Team1Player2, Team2Player1, Team2Player2, Status)`
               OUTPUT INSERTED.Id
               VALUES (@Team1Player1, @Team1Player2, @Team2Player1, @Team2Player2, 'ongoing')`);
+=======
+      .input('LocationId', sql.Int, locationId)
+      .query(`INSERT INTO Games (Team1Player1, Team1Player2, Team2Player1, Team2Player2, LocationId, Status)
+              OUTPUT INSERTED.Id
+              VALUES (@Team1Player1, @Team1Player2, @Team2Player1, @Team2Player2, @LocationId, 'ongoing')`);
+>>>>>>> main
     res.json({ gameId: result.recordset[0].Id });
   } catch (err) {
     console.error(err);
