@@ -61,6 +61,7 @@
     </thead>
     <tbody></tbody>
   </table>
+  <p id="winner" style="display:none; font-weight:bold;"></p>
 </div>
 
 <script>
@@ -139,6 +140,8 @@ document.getElementById('newGameForm').addEventListener('submit', async function
   document.getElementById('gameForm').style.display = 'none';
   document.getElementById('eventForm').style.display = 'block';
   document.querySelector('.scoreboard').style.display = 'block';
+  document.getElementById('winner').style.display = 'none';
+  loadEvents();
 });
 
 document.getElementById('addEventForm').addEventListener('submit', async function(e) {
@@ -162,6 +165,8 @@ async function loadEvents() {
   const tbody = document.querySelector('#eventsTable tbody');
   tbody.innerHTML = '';
   let turn = 1;
+  let t1Total = 0;
+  let t2Total = 0;
   json.events.forEach(ev => {
     if(ev.EventType === 'turn') {
       const row = document.createElement('tr');
@@ -175,8 +180,33 @@ async function loadEvents() {
       row.appendChild(tdT1);
       row.appendChild(tdT2);
       tbody.appendChild(row);
+      t1Total += ev.PointsTeam1;
+      t2Total += ev.PointsTeam2;
     }
   });
+
+  const totalRow = document.createElement('tr');
+  const tdLabel = document.createElement('td');
+  tdLabel.textContent = 'Total';
+  const tdT1Total = document.createElement('td');
+  tdT1Total.textContent = t1Total;
+  const tdT2Total = document.createElement('td');
+  tdT2Total.textContent = t2Total;
+  totalRow.appendChild(tdLabel);
+  totalRow.appendChild(tdT1Total);
+  totalRow.appendChild(tdT2Total);
+  tbody.appendChild(totalRow);
+
+  if(json.game.Status === 'complete') {
+    document.getElementById('eventForm').style.display = 'none';
+    const winnerEl = document.getElementById('winner');
+    const team = json.game.Winner === 1 ? 'Team 1' : 'Team 2';
+    winnerEl.textContent = team + ' wins!';
+    winnerEl.style.display = 'block';
+  } else {
+    document.getElementById('eventForm').style.display = 'block';
+    document.getElementById('winner').style.display = 'none';
+  }
 }
 
 // Initialize dropdowns on page load

@@ -4,7 +4,9 @@ This is a simple web application to track cornhole games. It exposes a small API
 Each player belongs to one of our company locations. The app does not require a location when starting a game because it is part of the player profile.
 
 The API now also lets you create and list players and locations. When starting a
-game you pick from the players stored in the database.
+game you pick from the players stored in the database. Games automatically end
+when a team reaches **21 points**. The winning team is stored in the `Games`
+table and each player's win/loss record is updated.
 
 ## Prerequisites
 
@@ -54,5 +56,7 @@ POST /players    - add a player (requires email and a location ID)
 GET  /players    - list players
 POST /games      - start a game with existing players
 ```
+
+Games end automatically when a team scores 21 points.
 
 This code is intentionally lightweight for hackathon use. Feel free to expand upon it!
