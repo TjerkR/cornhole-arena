@@ -40,15 +40,16 @@ app.get('/players', async (req, res) => {
 
 // Create new player
 app.post('/players', async (req, res) => {
-  const { name, locationId } = req.body;
+  const { name, email, locationId } = req.body;
   try {
     const pool = await getPool();
     const result = await pool.request()
       .input('name', sql.NVarChar, name)
+      .input('email', sql.NVarChar, email)
       .input('locationId', sql.Int, locationId)
-      .query(`INSERT INTO Players (Name, _Locations_ID)
+      .query(`INSERT INTO Players (Name, EmailAddress, _Locations_ID)
               OUTPUT INSERTED._Players_ID
-              VALUES (@name, @locationId)`);
+              VALUES (@name, @email, @locationId)`);
     res.json({ playerId: result.recordset[0]._Players_ID });
   } catch (err) {
     console.error(err);

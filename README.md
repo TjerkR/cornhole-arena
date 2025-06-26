@@ -50,7 +50,7 @@ game you pick from the players stored in the database.
 ```
 POST /locations  - add a location
 GET  /locations  - list locations
-POST /players    - add a player (requires a location ID)
+POST /players    - add a player (requires email and a location ID)
 GET  /players    - list players
 POST /games      - start a game with existing players
 ```

@@ -24,6 +24,7 @@
   <h2>Add Player</h2>
   <form id="newPlayerForm">
     <input type="text" id="playerName" placeholder="Player Name" required />
+    <input type="email" id="playerEmail" placeholder="Email Address" required />
     <select id="playerLocation" required></select>
     <button type="submit">Add Player</button>
   </form>
@@ -108,13 +109,15 @@ document.getElementById('newLocationForm').addEventListener('submit', async func
 document.getElementById('newPlayerForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const name = document.getElementById('playerName').value;
+  const email = document.getElementById('playerEmail').value;
   const locationId = parseInt(document.getElementById('playerLocation').value, 10);
   await fetch('/players', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, locationId })
+    body: JSON.stringify({ name, email, locationId })
   });
   document.getElementById('playerName').value = '';
+  document.getElementById('playerEmail').value = '';
   loadPlayers();
 });
 
