@@ -19,7 +19,6 @@
     <input type="number" id="p2" placeholder="Team 1 Player 2 ID" required />
     <input type="number" id="p3" placeholder="Team 2 Player 1 ID" required />
     <input type="number" id="p4" placeholder="Team 2 Player 2 ID" required />
-    <input type="number" id="location" placeholder="Location ID" required />
     <button type="submit">Create Game</button>
   </form>
 </div>
@@ -56,8 +55,7 @@ document.getElementById('newGameForm').addEventListener('submit', async function
     team1Player1: parseInt(document.getElementById('p1').value, 10),
     team1Player2: parseInt(document.getElementById('p2').value, 10),
     team2Player1: parseInt(document.getElementById('p3').value, 10),
-    team2Player2: parseInt(document.getElementById('p4').value, 10),
-    locationId: parseInt(document.getElementById('location').value, 10)
+    team2Player2: parseInt(document.getElementById('p4').value, 10) 
   };
   const res = await fetch('/games', {
     method: 'POST',
