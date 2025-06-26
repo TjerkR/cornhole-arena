@@ -119,13 +119,25 @@ app.post('/games', async (req, res) => {
 app.get('/games/:id', async (req, res) => {
   try {
     const pool = await getPool();
-    const game = await pool.request()
+    const gameRes = await pool.request()
       .input('id', sql.Int, req.params.id)
       .query('SELECT * FROM Games WHERE _Games_ID = @id');
-    const events = await pool.request()
+    const eventsRes = await pool.request()
       .input('gameId', sql.Int, req.params.id)
       .query('SELECT * FROM GameEvents WHERE _Games_ID = @gameId ORDER BY Timestamp ASC');
-    res.json({ game: game.recordset[0], events: events.recordset });
+
+    let team1 = 0;
+    let team2 = 0;
+    for (const ev of eventsRes.recordset) {
+      team1 += ev.PointsTeam1;
+      team2 += ev.PointsTeam2;
+    }
+
+    const game = gameRes.recordset[0];
+    game.ScoreTeam1 = team1;
+    game.ScoreTeam2 = team2;
+
+    res.json({ game, events: eventsRes.recordset });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch game' });
@@ -143,6 +155,48 @@ app.post('/games/:id/events', async (req, res) => {
       .input('pointsTeam2', sql.Int, pointsTeam2)
       .query(`INSERT INTO GameEvents (_Games_ID, Name, EventType, PointsTeam1, PointsTeam2, Timestamp)
               VALUES (@gameId, @eventType, @eventType, @pointsTeam1, @pointsTeam2, GETDATE())`);
+
+    const eventsRes = await pool.request()
+      .input('gameId', sql.Int, req.params.id)
+      .query('SELECT PointsTeam1, PointsTeam2 FROM GameEvents WHERE _Games_ID = @gameId');
+
+    let t1 = 0;
+    let t2 = 0;
+    for (const ev of eventsRes.recordset) {
+      t1 += ev.PointsTeam1;
+      t2 += ev.PointsTeam2;
+    }
+
+    if (t1 >= 21 || t2 >= 21) {
+      const winner = t1 >= 21 ? 1 : 2;
+
+      await pool.request()
+        .input('status', sql.NVarChar, 'complete')
+        .input('winner', sql.Int, winner)
+        .input('team1', sql.Int, t1)
+        .input('team2', sql.Int, t2)
+        .input('id', sql.Int, req.params.id)
+        .query(`UPDATE Games SET Status=@status, Winner=@winner, Team1Score=@team1, Team2Score=@team2, CompletedAt=GETDATE() WHERE _Games_ID=@id`);
+
+      const gameRes = await pool.request()
+        .input('id', sql.Int, req.params.id)
+        .query('SELECT _Team1_Player1_ID, _Team1_Player2_ID, _Team2_Player1_ID, _Team2_Player2_ID FROM Games WHERE _Games_ID=@id');
+      const g = gameRes.recordset[0];
+      const winners = winner === 1 ? [g._Team1_Player1_ID, g._Team1_Player2_ID] : [g._Team2_Player1_ID, g._Team2_Player2_ID];
+      const losers = winner === 1 ? [g._Team2_Player1_ID, g._Team2_Player2_ID] : [g._Team1_Player1_ID, g._Team1_Player2_ID];
+
+      for (const pid of winners) {
+        await pool.request()
+          .input('pid', sql.Int, pid)
+          .query('UPDATE Players SET Wins = ISNULL(Wins,0)+1 WHERE _Players_ID=@pid');
+      }
+      for (const pid of losers) {
+        await pool.request()
+          .input('pid', sql.Int, pid)
+          .query('UPDATE Players SET Losses = ISNULL(Losses,0)+1 WHERE _Players_ID=@pid');
+      }
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);
