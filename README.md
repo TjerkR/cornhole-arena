@@ -1,6 +1,10 @@
 # Cornhole Arena
 
 This is a simple web application to track cornhole games. It exposes a small API powered by Node.js and Express and stores game data in SQL Server.
+<<<<<<< 8atgqv-codex/connect-frontend-to-sql-server-database
+Each player belongs to one of our company locations. The app does not require a location when starting a game because it is part of the player profile.
+=======
+>>>>>>> main
 
 ## Prerequisites
 
