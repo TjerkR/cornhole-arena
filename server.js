@@ -33,9 +33,7 @@ app.post('/games', async (req, res) => {
       .input('Team1Player2', sql.Int, team1Player2)
       .input('Team2Player1', sql.Int, team2Player1)
       .input('Team2Player2', sql.Int, team2Player2)
-      .query(`INSERT INTO Games (Team1Player1, Team1Player2, Team2Player1, Team2Player2, Status)`
-              OUTPUT INSERTED.Id
-              VALUES (@Team1Player1, @Team1Player2, @Team2Player1, @Team2Player2, 'ongoing')`);
+      .query(`INSERT INTO Games (Team1Player1, Team1Player2, Team2Player1, Team2Player2, Status) OUTPUT INSERTED.Id VALUES (@Team1Player1, @Team1Player2, @Team2Player1, @Team2Player2, 'ongoing')`);
     res.json({ gameId: result.recordset[0].Id });
   } catch (err) {
     console.error(err);
